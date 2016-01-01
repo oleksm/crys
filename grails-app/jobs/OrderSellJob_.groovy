@@ -4,7 +4,7 @@ import tech.oleks.crys.exception.ExpressionEvaluationException
 /**
  * Created by alexm on 8/12/14.
  */
-class OrderSellJob {
+class OrderSellJob_ {
     static triggers = {
         cron name: "place-sell-orders", startDelay: 2000, cronExpression: '40 */5 * * * ?'
     }
@@ -34,7 +34,7 @@ class OrderSellJob {
                         if (pairService.fullUpdate(p, 2) | accountService.fullUpdate(a, 2)) {
                             eval = orderService.evaluateForSell(p, a)
                             if (!eval) {
-                                log.debug "order placement rejected after update: ${p}"
+                                log.info "order placement rejected after update: ${p}"
                                 return
                             }
                             def order = orderService.prepareSellOrder(a, p, eval)

@@ -3,7 +3,7 @@ import tech.oleks.crys.exception.ExpressionEvaluationException
 /**
  * Created by alexm on 8/10/14.
  */
-class OrderBuyJob {
+class OrderBuyJob_ {
     static triggers = {
         cron name: "place-buy-orders", startDelay: 2000, cronExpression: '30 */5 * * * ?'
     }
@@ -34,7 +34,7 @@ class OrderBuyJob {
                             if (pairService.fullUpdate(p, 2) | accountService.fullUpdate(a, 2)) {
                                 eval = orderService.evaluateForBuy(p, a)
                                 if (!eval) {
-                                    log.debug "order placement rejected after update: ${p}"
+                                    log.info "order placement rejected after update: ${p}"
                                     return
                                 }
                             }
@@ -52,7 +52,7 @@ class OrderBuyJob {
                 }
             }
             else {
-                log.debug "no funds available ${a.id} for byuing"
+                log.info "no funds available ${a.id} for byuing"
             }
         }
     }

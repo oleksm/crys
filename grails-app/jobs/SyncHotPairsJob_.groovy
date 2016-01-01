@@ -5,7 +5,7 @@ import tech.oleks.crys.model.domain.Pair
 /**
  * Created by alexm on 8/8/14.
  */
-class SyncHotPairsJob {
+class SyncHotPairsJob_ {
 
     static triggers = {
         cron name: "valuate-hot-pairs", startDelay: 2000, cronExpression: '02 */5 * * * ?'

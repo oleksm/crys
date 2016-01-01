@@ -3,24 +3,24 @@ import org.springframework.beans.factory.annotation.Value
 /**
  * Created by alexm on 8/31/14.
  */
-class PairStatsDailyJob {
+class PairStatsHourlyJob_ {
     static triggers = {
-        cron name: "pair-calcStats-daily", startDelay: 2000, cronExpression: '8 3 01 * * ?'
+        cron name: "pair-calcStats-hourly", startDelay: 2000, cronExpression: '0 3 * * * ?'
     }
 
-    def description = "Collect Pair Stats Daily Job"
+    def description = "Collect Pair Stats Hourly Job"
     def concurrent = false
     def sessionRequired = false
 
     def pairService
     def evaluationService
-    int mins = 60 * 24 + 5
+    int mins = 60 + 5
 
     def execute() {
         def pairs = pairService.activePairs()
         pairs?.each { p ->
-            evaluationService.addStats(p, mins, "daily")
+            evaluationService.addStats(p, mins, "hourly")
         }
-        log.info "collected daily calcStats for ${pairs?.size()} pairs"
+        log.debug "collected calcStats for ${pairs?.size()} pairs"
     }
 }

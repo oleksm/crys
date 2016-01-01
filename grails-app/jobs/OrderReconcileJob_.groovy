@@ -3,7 +3,7 @@ import org.springframework.beans.factory.annotation.Value
 /**
  * Created by alexm on 8/10/14.
  */
-class OrderReconcileJob {
+class OrderReconcileJob_ {
     static triggers = {
         cron name: "reconcile-closed-orders", startDelay: 2000, cronExpression: '25 07 */8 * * ?'
     }

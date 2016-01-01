@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Value
 /**
  * Created by alexm on 8/14/14.
  */
-class SyncSlowPairsJob {
+class SyncSlowPairsJob_ {
 
     static triggers = {
         cron name: "sync-slow-pairs", startDelay: 2000, cronExpression: '05 05 01 * * ?'
