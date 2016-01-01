@@ -1,6 +1,8 @@
 package tech.oleks.crys.service.model.domain.quartz
 
+import grails.persistence.support.PersistenceContextInterceptor
 import grails.transaction.Transactional
+import grails.util.Holders
 import org.apache.commons.lang.StringUtils
 import org.apache.commons.lang.exception.ExceptionUtils
 import org.quartz.JobExecutionContext

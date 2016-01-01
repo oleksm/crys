@@ -64,7 +64,7 @@ class SyncPairsJob {
         void run() {
             ExecutorService exec = Executors.newFixedThreadPool(exchangeThreads)
             def batches = pairs.collate(exchangeBatchSize)
-            log.debug "batches: ${batches}"
+            log.info "batches: ${batches}"
             batches.each { batch ->
                 exec.execute(new SyncPairWorker(pairs: batch))
             }

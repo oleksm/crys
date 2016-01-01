@@ -17,7 +17,7 @@ class JobEvent {
     static constraints = {
         eventName (nullable: true)
         errorMessage (nullable: true, type: 'text')
-        stackTrace (nullable: true, maxSize: 16000)
+        stackTrace (nullable: true, maxSize: 8000)
         duration (min: 0L)
         eventId (unique: true)
     }

@@ -5,33 +5,45 @@ crys.rest.client.useragent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) App
 crys.rest.client.connectTimeout = 1000
 crys.rest.client.readTimeout = 30000
 
-crys.exchange.accept.pairs = ".+_btc"
+crys.exchange {
+    accept.pairs.regex = ".+_btc"
+    cryptsy.tradeFee = 0.0025
+    cryptsy.minPriceMovement = 8
+    cryptsy.minTradeAmount = 0.00000011
+    cryptsy.dateFormat = "yyyy-MM-dd HH:mm:ss" //2014-08-16 16:45:19
+    cryptsy.timeZone = "GMT-4"
+    cryptsy.secureUrl = "https://api.cryptsy.com/api"
+    chart.minAmount=1.0d
+}
 
-crys.exchange.cryptsy.tradeFee = 0.0025
-crys.exchange.cryptsy.minPriceMovement = 8
-crys.exchange.cryptsy.minTradeAmount = 0.00000011
-crys.exchange.cryptsy.dateFormat = "yyyy-MM-dd HH:mm:ss" //2014-08-16 16:45:19
-crys.exchange.cryptsy.timeZone = "GMT-4"
-crys.exchange.cryptsy.secureUrl = "https://api.cryptsy.com/api"
-
-crys.exchange.chart.minAmount=1.0d
-
+//    cronExpression: "s m h D M W Y"
+//    | | | | | | `- Year [optional]
+//    | | | | | `- Day of Week, 1-7 or SUN-SAT, ?
+//    | | | | `- Month, 1-12 or JAN-DEC
+//    | | | `- Day of Month, 1-31, ?
+//    | | `- Hour, 0-23
+//    | `- Minute, 0-59
+//    `- Second, 0-59
 
 crys.job.orderbuy.enable=false
 crys.job.ordercancel.enable=false
 crys.job.orderreconcile.enable=false
 crys.job.ordersell.enable=false
 crys.job.syncaccounts.enable=false
-crys.job.syncexchange.enable=true
+crys.job.syncexchange.schedule = '0 0 */8 * * ?'
 crys.job.synchotpairs.enable=false
 
-crys.job.syncpairs.enable=false
-crys.job.syncpairs.cacheMin=20
-crys.job.syncpairs.threads=5
-crys.job.syncpairs.waitThreadsSec=300
-crys.job.syncpairs.exchange.threads=3
-crys.job.syncpairs.exchange.batchSize=6
-crys.job.syncpairs.exchange.waitThreadsPerPairSec=15
+crys.job.syncpairs {
+    enable=false
+    cacheMin=20
+    threads=5
+    waitThreadsSec=300
+    exchange {
+        threads = 3
+        batchSize=6
+        waitThreadsPerPairSec=15
+    }
+}
 
 crys.pair.stats.depth.lookup=0.05
 crys.pair.sync.slowTreshold24 = 1.0

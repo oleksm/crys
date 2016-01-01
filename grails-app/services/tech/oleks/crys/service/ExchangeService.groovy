@@ -23,8 +23,8 @@ abstract class ExchangeService  {
     def consistencyValidationService
     def accountService
 
-    @Value('${crys.exchange.accept.pairs}')
-    def acceptPairs
+    @Value('${crys.exchange.accept.pairs.regex}')
+    def acceptPairsRegex
 
     @Value('${crys.pair.sync.slowTreshold24}')
     Double slowPairTreshold24
@@ -35,14 +35,21 @@ abstract class ExchangeService  {
         auditService.syncEvent(new Audit(entity: Audit.Entity.Pair, attributes: [exchange: ex.name]))
         def localPairs = ex.pairs
         pairs.each { p ->
-            if (!p.name.matches(acceptPairs)) {
-                log.debug "Filtered out as no match: ${p.name}"
+            if (!p.name.matches(acceptPairsRegex)) {
+                log.debug "Filtered out as not a match: ${p.name}"
                 return
             }
             def lp = localPairs.find { it.name == p.name }
             if (lp) {
                 log.debug " Found local pair: ${lp}"
                 //TODO: verify pair change
+                if (lp.name != p.name
+                    || lp.refId != p.refId
+                    || lp.tradeFee != p.tradeFee
+                    || lp.minTradeAmount != p.minTradeAmount
+                    || lp.minPriceMovement != p.minPriceMovement) {
+                    log.warn "Local Pair and remote do not match! \n${lp}\n${p}"
+                }
                 lp.name = p.name
                 lp.refId = p.refId
                 lp.tradeFee = p.tradeFee
@@ -50,7 +57,7 @@ abstract class ExchangeService  {
                 lp.minPriceMovement = p.minPriceMovement
             }
             else {
-                log.debug "New pair: ${p}"
+                log.info "New pair: ${p}"
                 // TODO: submit add event
                 p.trade = true
                 p.synced = new Date()
@@ -62,7 +69,7 @@ abstract class ExchangeService  {
             def p = pairs.find{ it.name == lp.name }
             if (!p) {
                 // TODO: submit delete event
-                log.warn "Removed Pair: ${lp}"
+                log.warn "Remove Pair: ${lp}"
             }
         }
         ex.save(failOnError: true)
@@ -133,14 +140,14 @@ abstract class ExchangeService  {
                     }
                 }
                 else {
-                    log.debug "New trade history record: ${t}"
+                    log.debug "New trade history record for pair ${p.name}: ${t}"
                     pair.addToTrades(t)
                 }
             }
         }
         else {
             pair.slow = true
-            log.debug "${pair.exchange.name}:${pair.name} is slow market"
+            log.info "${pair.exchange.name}:${pair.name} is slow market"
         }
     }
 
@@ -157,7 +164,7 @@ abstract class ExchangeService  {
                 def lo = localOrders.find {it.refId == o.refId}
                 if (lo) {
                     if (o.volume != lo.volume) {
-                        log.debug "Order ${o.refId} volume changed: ${lo.volume} -> ${o.volume}"
+                        log.info "Order ${o.refId} volume changed: ${lo.volume} -> ${o.volume}"
                     }
                     lo.status = o.status
                     lo.volume = o.volume
@@ -165,7 +172,7 @@ abstract class ExchangeService  {
                     lo.save(failOnError: true)
                 }
                 else {
-                    log.debug "Acquired new remote order for ${account.name} - ${o.pair.name}: ${o.orderId}}"
+                    log.info "Acquired new remote order for ${account.name} - ${o.pair.name}: ${o.orderId}}"
                     // Add Order
                     o.acquired = d
                     o.synced = d
@@ -186,13 +193,13 @@ abstract class ExchangeService  {
                 lo.status = Order.Status.closed
                 lo.synced = d
                 lo.save(failOnError: true)
-                log.debug "closing order ${lo.refId} for unknown yet reason"
+                log.info "closing order ${lo.refId} for unknown yet reason"
             }
         }
     }
 
     def cancelOrder(Order order) {
-        log.debug "cancelling order: ${order.refId}"
+        log.info "cancelling order: ${order.refId}"
         // check belongs to this exchange
         def ex = getExchange()
         if (order.pair.exchange != ex) {

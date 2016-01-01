@@ -5,8 +5,11 @@ import org.joda.time.DateTime
 import org.springframework.beans.factory.annotation.Value
 import tech.oleks.crys.evaluation.Expressions
 import tech.oleks.crys.model.domain.Account
+import tech.oleks.crys.model.domain.Ask
+import tech.oleks.crys.model.domain.Bid
 import tech.oleks.crys.model.domain.MarketStats
 import tech.oleks.crys.model.domain.Pair
+import tech.oleks.crys.model.domain.Trade
 
 import java.math.RoundingMode
 
@@ -30,7 +33,7 @@ class EvaluationService {
                 Trade.findAllByPairAndTimeStampGreaterThanAndTimeStampLessThanEquals(pair, cutoff, checkpoint.timeStamp)
                 : Trade.findAllByPairAndTimeStampGreaterThan(pair, cutoff)
         if (!trades) {
-            log.debug "No trades for ${pair.name} after ${cutoff}"
+            log.info "No trades for ${pair.name} after ${cutoff}"
             return
         }
         def sells = trades.findAll { it.type == Trade.Type.sell }
@@ -94,13 +97,13 @@ class EvaluationService {
     }
 
     def addStats(Pair pair, Date cutoff, String tag) {
-        log.debug "Adding statistics for ${pair.exchange.name} ${pair.name} after ${cutoff} (${tag})"
+        log.info "Adding statistics for ${pair.exchange.name} ${pair.name} after ${cutoff} (${tag})"
         def stats = calcStats(pair, cutoff)
         if (stats) {
             stats.tag = tag
             stats.save(failOnError: true)
         } else {
-            log.debug "No calcStats calculated for ${pair.exchange.name}:${pair.name}"
+            log.info "No calcStats calculated for ${pair.exchange.name}:${pair.name}"
         }
     }
 

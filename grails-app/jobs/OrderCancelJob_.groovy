@@ -1,5 +1,3 @@
-import grails.util.Holders
-import org.springframework.beans.factory.annotation.Value
 import tech.oleks.crys.exception.ExpressionEvaluationException
 
 /**

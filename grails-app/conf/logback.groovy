@@ -16,8 +16,14 @@ if (Environment.isDevelopmentMode() && targetDir) {
         file = "${targetDir}/stacktrace.log"
         append = true
         encoder(PatternLayoutEncoder) {
-            pattern = "%level %logger - %msg%n"
+            pattern = "%level %logger{20} - %msg%n"
         }
     }
     logger("StackTrace", ERROR, ['FULL_STACKTRACE'], false)
 }
+logger("tech.oleks", DEBUG, ['STDOUT'], false)
+logger("grails.app", DEBUG, ['STDOUT'], false)
+logger("grails.app.services.tech.oleks.crys.service.util.RestClientService", INFO, ['STDOUT'], false)
+logger("grails.app.services.tech.oleks.crys.service.exchange.CryptsyExchangeService", INFO, ['STDOUT'], false)
+logger("grails.app.services.tech.oleks.crys.service.exchange.BterExchangeService", INFO, ['STDOUT'], false)
+logger("grails.app.services.grails.plugin", INFO, ['STDOUT'], false)

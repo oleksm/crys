@@ -9,6 +9,8 @@ import tech.oleks.crys.evaluation.OrderEvaluation
 import tech.oleks.crys.exception.ApparentBugException
 import tech.oleks.crys.model.domain.Account
 import tech.oleks.crys.model.domain.Ask
+import tech.oleks.crys.model.domain.Bid
+import tech.oleks.crys.model.domain.MarketStats
 import tech.oleks.crys.model.domain.Order
 import tech.oleks.crys.model.domain.Pair
 import tech.oleks.crys.util.EvalUtils
@@ -29,8 +31,24 @@ class OrderService {
 
     List<Order> getOpenOrders() {
         return handleManualOrders ?
-                Order.findAllByStatus(Order.Status.open, [sort: "price", order: "desc"]) :
-                Order.findAllByStatusAndCreatedIsNotNull(Order.Status.open, [sort: "price", order: "desc"])
+            Order.createCriteria().list {
+                createAlias "account", "a"
+                and {
+                    eq "status", Order.Status.open
+                    eq "a.active", true
+                }
+                order "price", "desc"
+            }
+        :
+            Order.createCriteria().list {
+                createAlias "account", "a"
+                and {
+                    eq "status", Order.Status.open
+                    isNotNull("created")
+                    eq "a.active", true
+                }
+                order "price", "desc"
+            }
     }
 
     boolean isForCancel(Order o) {
@@ -43,7 +61,7 @@ class OrderService {
         def profile = o.account.profile
         // No orders longer than 24hr
         if (orderDate < new DateTime().minusHours(profile.maxOpenOrderHr).toDate()) {
-            log.debug "Cancel order ${o.refId}: sitting more than 24hr"
+            log.info "Cancel order ${o.refId}: sitting more than 24hr"
             return true
         }
         switch (o.type) {
@@ -62,12 +80,12 @@ class OrderService {
                     }
                     def vSold = evaluationService.getCurrentSampleByPairAndAccount(o.account, o.pair).volSold
                     if (bda > 0 && bda > vSold) {
-                        log.debug "Cancel order ${o.refId}: Overwhelming buy depth above ${bda} > ${vSold}"
+                        log.info "Cancel order ${o.refId}: Overwhelming buy depth above ${bda} > ${vSold}"
                         return true
                     }
                     def exprs = new Expressions(account: o.account, pair: o.pair)
                     if (!exprs.run('bidExpressions')) {
-                        log.debug "Cancel order ${o.refId} coz don't want to buy ${o.pair.name} anymore"
+                        log.info "Cancel order ${o.refId} coz don't want to buy ${o.pair.name} anymore"
                     }
                 }
                 break;
@@ -86,7 +104,7 @@ class OrderService {
                     }
                     def vPur = evaluationService.getCurrentSampleByPairAndAccount(o.account, o.pair).volPurchased
                     if (sda > 0 && sda > vPur) {
-                        log.debug "Cancel order ${o.refId}: Overwhelming sell depth above ${sda} > ${vPur}"
+                        log.info "Cancel order ${o.refId}: Overwhelming sell depth above ${sda} > ${vPur}"
                         return true
                     }
                 }
@@ -100,7 +118,7 @@ class OrderService {
         def merch = pairService.merchCurrency(p.name)
 
         if (a.funds[base] < a.profile.minQuote) {
-            log.debug "No funds available to buy ${a.name} - ${p.name}"
+            log.info "No funds available to buy ${a.name} - ${p.name}"
             return
         }
 
@@ -108,7 +126,7 @@ class OrderService {
         def q = a.funds[base] < a.profile.maxQuote ? a.funds[base] : a.profile.maxQuote
         def invested = (EvalUtils.dbl(a.funds[merch]) + EvalUtils.dbl(a.lockedFunds[merch])) * p.bidPrice
         if (invested + q > a.profile.maxPairQuote) {
-            log.debug "merch ${merch} investment ${invested} exceeds limit ${a.profile.maxPairQuote} for the pair ${p.name}"
+            log.info "merch ${merch} investment ${invested} exceeds limit ${a.profile.maxPairQuote} for the pair ${p.name}"
             return
         }
         // is last order placed more than interval
@@ -124,13 +142,13 @@ class OrderService {
         }
         if (orders) {
             if (orders.size() >= a.profile.maxOpenBuyOrders) {
-                log.debug "Exceeded number of open orders per pair ${p.name} for account ${a.name}: ${a.profile.maxOpenBuyOrders}"
+                log.info "Exceeded number of open orders per pair ${p.name} for account ${a.name}: ${a.profile.maxOpenBuyOrders}"
                 return
             }
             def order = orders.get(0)
             Date d = order.created ?: order.acquired
             if (d > new DateTime().minusMinutes(a.profile.buyOrderDelay).toDate()) {
-                log.debug "Order ${order.refId} placed at ${d} which less than ${a.profile.buyOrderDelay} min past"
+                log.info "Order ${order.refId} placed at ${d} which less than ${a.profile.buyOrderDelay} min past"
                 return
             }
         }
@@ -150,7 +168,7 @@ class OrderService {
     OrderEvaluation evaluateForSell(Pair p, Account a) {
         def merch = pairService.merchCurrency(p.name)
         if (!a.funds[merch] || EvalUtils.gamt(a.funds[merch], p.askPrice, p.tradeFee) < p.minTradeAmount) {
-            log.debug "Not enough ${merch} funds ${a.funds[merch]} left to sell"
+            log.info "Not enough ${merch} funds ${a.funds[merch]} left to sell"
             return
         }
         // is last order placed more than interval
@@ -166,13 +184,13 @@ class OrderService {
         }
         if (orders) {
             if (orders.size() >= a.profile.maxOpenSellOrders) {
-                log.debug "Exceeded number of open orders per pair ${p.name}: ${a.profile.maxOpenSellOrders}"
+                log.info "Exceeded number of open orders per pair ${p.name}: ${a.profile.maxOpenSellOrders}"
                 return
             }
             def order = orders.get(0)
             Date d = order.created ?: order.acquired
             if (d > new DateTime().minusMinutes(a.profile.sellOrderDelay).toDate()) {
-                log.debug "Order ${order.refId} placed at ${d} which less than ${a.profile.sellOrderDelay} min past"
+                log.info "Order ${order.refId} placed at ${d} which less than ${a.profile.sellOrderDelay} min past"
                 return
             }
         }

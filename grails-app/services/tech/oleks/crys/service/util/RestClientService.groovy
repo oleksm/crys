@@ -2,6 +2,7 @@ package tech.oleks.crys.service.util
 
 import grails.plugins.rest.client.RestBuilder
 import org.springframework.beans.factory.annotation.Value
+import tech.oleks.crys.util.InvokeUtils
 
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec

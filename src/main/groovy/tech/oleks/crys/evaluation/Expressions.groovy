@@ -8,6 +8,7 @@ import tech.oleks.crys.exception.ExpressionEvaluationException
 import tech.oleks.crys.model.domain.Account
 import tech.oleks.crys.model.domain.Pair
 import tech.oleks.crys.model.domain.TradeProfile
+import tech.oleks.crys.util.ComponentUtils
 
 /**
  * Created by alexm on 9/14/14.
@@ -24,7 +25,7 @@ public class Expressions {
         def pv = account.profile.getProperty(prop)
         Collection exprs = pv instanceof Collection ? pv : [pv]
         if (!exprs) {
-            log.debug "no expressions ${prop} to evaluate ${account.name}::${pair.name}"
+            log.info "no expressions ${prop} to evaluate ${account.name}::${pair.name}"
             return
         }
 
@@ -46,11 +47,11 @@ public class Expressions {
         if (debug) {
             for (def expr: exprs) {
                 try {
+                    log.debug "evaluating expression for ${account.name} :: ${pair.name} :: ${expr}"
                     result = shell.evaluate(expr)
                 }
                 catch (Exception ex) {
-                    throw new ExpressionEvaluationException("account: ${account.name}(${account.id}), pair: " +
-                            "${pair.exchange.name}:${pair.name}(${pair.id}), expression: ${expr}", ex)
+                    throw new ExpressionEvaluationException("expression: ${expr}", ex)
                 }
                 report.add("${expr} : [${result}]")
                 if (!result) {
@@ -71,7 +72,7 @@ public class Expressions {
         }
         long execMills = System.currentTimeMillis() - start
         report.add("Executed within ${execMills} ms.")
-        log.debug(report.toString())
+        log.info(report.toString())
         return [result: result, report: report]
     }
 
